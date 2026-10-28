@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+  "name": "yt-dlp Launcher",
+  "version": "2.0.0",
+  "description": "Download the current YouTube video as MKV with yt-dlp on your computer. Resolution, audio quality, queue and history.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ytdlp-launcher@local",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": { "required": ["none"] }
+    },
+    "gecko_android": { "strict_min_version": "142.0" }
+  },
+  "permissions": ["nativeMessaging", "activeTab", "notifications", "storage", "downloads"],
+  "background": { "scripts": ["background.js"] },
+  "browser_action": {
+    "default_icon": { "16": "icons/tb-ink-16.png", "32": "icons/tb-ink-32.png" },
+    "theme_icons": [
+      { "light": "icons/tb-white-16.png", "dark": "icons/tb-ink-16.png", "size": 16 },
+      { "light": "icons/tb-white-32.png", "dark": "icons/tb-ink-32.png", "size": 32 }
+    ],
+    "default_title": "Download this video (yt-dlp)",
+    "default_popup": "popup/popup.html"
+  },
+  "icons": { "48": "icons/icon-48.png", "96": "icons/icon-96.png" }
+}

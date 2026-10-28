@@ -1,0 +1,9 @@
+{
+    "name":  "yt_dlp_host",
+    "description":  "Runs yt-dlp for the yt-dlp Launcher extension",
+    "path":  "C:\\Tools\\yt-dlp-launcher\\host\\host.bat",
+    "type":  "stdio",
+    "allowed_extensions":  [
+                               "ytdlp-launcher@local"
+                           ]
+}
