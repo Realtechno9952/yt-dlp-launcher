@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>yt-dlp Launcher</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+<div id="shell">
+  <div id="scroller">
+    <div id="stack" hidden></div>
+
+    <!-- HOME / DOWNLOADER -->
+    <section id="pane-home" class="pane">
+      <div id="app">
+        <section id="card" hidden>
+          <div class="thumb" id="thumbBox"><img id="thumb" alt="" draggable="false"></div>
+          <h1 id="title"></h1>
+        </section>
+
+        <section id="empty" class="empty" hidden>
+          <div class="empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 4v10M8 10.5l4 4 4-4M5 19h14"/></svg>
+          </div>
+          <h1>Open a YouTube video</h1>
+          <p>Then open this panel again to download it.</p>
+        </section>
+
+        <section id="setup" class="stack" hidden>
+          <div class="banner warn" role="alert">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.2 14.2 13H1.8zM8 6.5v3M8 11.4h.01"/></svg>
+            <div><strong id="setupTitle"></strong><p id="setupMsg"></p><p id="setupDetail" class="detail" hidden></p></div>
+          </div>
+          <code id="setupCode"></code>
+          <button id="recheck" class="btn secondary" type="button">Check again</button>
+        </section>
+
+        <section id="form" class="stack" hidden>
+          <fieldset>
+            <legend>Resolution</legend>
+            <div class="chips" id="chips" role="radiogroup" aria-label="Resolution"></div>
+          </fieldset>
+          <label class="row"><span>Embed English captions</span><input type="checkbox" id="subs" class="switch" role="switch"></label>
+          <p id="ffwarn" class="note warn-text" hidden>ffmpeg wasn't found, so merging video and audio may fail.</p>
+          <button id="go" class="btn primary" type="button">Download as MKV</button>
+          <p class="hint" id="goHint">Saved to your Downloads folder</p>
+        </section>
+
+        <section id="busy" class="stack" hidden>
+          <div class="stage"><span id="stage"></span><span id="pct"></span></div>
+          <div class="progress" id="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="bar" id="bar"></div></div>
+          <div class="meta"><span id="speed"></span><span id="eta"></span></div>
+          <button id="cancel" class="btn secondary" type="button">Cancel</button>
+        </section>
+
+        <section id="result" class="stack" hidden>
+          <div class="banner" id="banner" role="status">
+            <svg id="bannerIcon" viewBox="0 0 16 16" aria-hidden="true"></svg>
+            <div><strong id="bannerTitle"></strong><p id="bannerMsg"></p><p id="bannerDetail" class="detail" hidden></p></div>
+          </div>
+          <button id="reveal" class="btn primary" type="button">Show in folder</button>
+          <button id="again" class="btn secondary" type="button">Download another quality</button>
+        </section>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="pane-history" class="pane" hidden>
+      <header class="pane-head"><h2>History</h2><button id="clearHist" class="link" type="button">Clear all</button></header>
+      <div id="histList"></div>
+      <div id="histEmpty" class="empty slim" hidden>
+        <div class="empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4.5l3 1.8"/></svg></div>
+        <h1>Nothing here yet</h1><p>Finished downloads show up here.</p>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="pane-settings" class="pane" hidden>
+      <header class="pane-head"><h2>Settings</h2><button id="resetSettings" class="link" type="button">Reset</button></header>
+
+      <h3>Downloads</h3>
+      <div class="stack">
+        <fieldset><legend>Default resolution</legend><div id="setRes" class="chips" role="radiogroup" aria-label="Default resolution"></div></fieldset>
+        <label class="row"><span>Embed English captions by default</span><input type="checkbox" id="setSubs" class="switch" role="switch"></label>
+        <fieldset><legend>Sound quality</legend><div id="setAudio" class="seg"></div><p id="audioNote" class="note"></p></fieldset>
+        <fieldset><legend>Downloads at once</legend><div id="setConc" class="seg"></div></fieldset>
+        <label class="row"><span>Add video ID to filename<small>Title [abc123].mkv instead of Title.mkv</small></span><input type="checkbox" id="setId" class="switch" role="switch"></label>
+        <label class="row"><span>Use my Firefox login<small>Helps when YouTube says "not a bot"</small></span><input type="checkbox" id="setLogin" class="switch" role="switch"></label>
+      </div>
+
+      <h3>Appearance</h3>
+      <div class="stack">
+        <fieldset><legend>Theme</legend><div id="setTheme" class="seg"></div></fieldset>
+        <fieldset><legend>Accent colour</legend><div id="setAccent" class="swatches" role="radiogroup" aria-label="Accent colour"></div></fieldset>
+        <label class="row"><span>Smooth animations</span><input type="checkbox" id="setMotion" class="switch" role="switch"></label>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" role="status" hidden></div>
+
+  <nav id="dock" class="dock" role="tablist" aria-label="Sections">
+    <span id="lens" class="lens" aria-hidden="true"></span>
+    <button class="tab" role="tab" data-tab="settings" type="button" aria-label="Settings">
+      <svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span>Settings</span>
+    </button>
+    <button class="tab" role="tab" data-tab="home" type="button" aria-label="Downloader">
+      <svg viewBox="0 0 24 24"><path d="M12 4v10M8 10.5l4 4 4-4M5 19h14"/></svg><span>Download</span>
+    </button>
+    <button class="tab" role="tab" data-tab="history" type="button" aria-label="History">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4.5l3 1.8"/></svg><span>History</span>
+    </button>
+  </nav>
+</div>
+<script src="dock.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>
