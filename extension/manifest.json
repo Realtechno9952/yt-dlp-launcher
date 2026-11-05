@@ -1,0 +1,28 @@
+{
+  "manifest_version": 2,
+  "name": "yt-dlp Launcher",
+  "version": "2.0.0",
+  "description": "Download videos from YouTube and other sites as MKV, MP4, audio and more with yt-dlp on your computer. Queue, history, clips, playlists.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ytdlp-launcher@local",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": { "required": ["none"] }
+    },
+    "gecko_android": { "strict_min_version": "142.0" }
+  },
+  "permissions": ["nativeMessaging", "activeTab", "notifications", "storage", "downloads", "menus", "https://api.github.com/*"],
+  "background": { "scripts": ["lib/targets.js", "background.js"] },
+  "commands": {
+    "download-default": {
+      "suggested_key": { "default": "Alt+Shift+D" },
+      "description": "Download the current page's video with my default settings"
+    }
+  },
+  "browser_action": {
+    "default_icon": { "16": "icons/icon-16.png", "32": "icons/icon-32.png" },
+    "default_title": "Download this video (yt-dlp)",
+    "default_popup": "popup/popup.html"
+  },
+  "icons": { "48": "icons/icon-48.png", "96": "icons/icon-96.png", "128": "icons/icon-128.png" }
+}
