@@ -223,10 +223,13 @@ function Get-Friendly([string]$errText, [bool]$usedLogin) {
         $hint = 'YouTube is limiting this connection. Wait a while, or switch network (a phone hotspot works), then try again.'
     } elseif ($errText -match '(?i)ffmpeg.*(not found|not installed)|ffprobe.*not found') {
         $hint = "ffmpeg wasn't found. Install it with: winget install yt-dlp.yt-dlp"
+<<<<<<< HEAD
     } elseif ($errText -match '(?i)requested format is not available') {
         $hint = "That resolution or file type isn't offered for this video. Try Best, or another resolution."
     } elseif ($errText -match '(?i)unsupported url|no video could be found|no video formats found') {
         $hint = "yt-dlp can't find a video it can download on this page."
+=======
+>>>>>>> 63d176cdf9b04668e3c9abd6d39bfa40838421c3
     } elseif ($errText -match '(?i)private video|confirm your age|members-only|video unavailable|not available') {
         $hint = "YouTube won't let this video be downloaded without signing in, or it isn't available."
     }
@@ -239,7 +242,10 @@ function Invoke-YtDlp([string]$exe, [string]$argString) {
     $cancelled = $false
     $finalPath = ''
     $already = $false
+<<<<<<< HEAD
     $files = 0
+=======
+>>>>>>> 63d176cdf9b04668e3c9abd6d39bfa40838421c3
     $err = ''
     try {
         $outTask = $p.StandardOutput.ReadLineAsync()
@@ -252,9 +258,15 @@ function Invoke-YtDlp([string]$exe, [string]$argString) {
                 $line = $outTask.Result
                 if ($null -eq $line) { break }
                 if ($line.StartsWith('FILEPATH|')) {
+<<<<<<< HEAD
                     $finalPath = $line.Substring(9); $files++
                 } else {
                     if ($line -match 'has already been downloaded|already present|already exists') { $already = $true }
+=======
+                    $finalPath = $line.Substring(9)
+                } else {
+                    if ($line -match 'has already been downloaded') { $already = $true }
+>>>>>>> 63d176cdf9b04668e3c9abd6d39bfa40838421c3
                     $isProgress = ($line -match '^\[download\]\s+[\d.]+%')
                     $now = $sw.ElapsedMilliseconds
                     if ((-not $isProgress) -or (($now - $lastProgress) -ge 250) -or ($line -match '\s100(\.0+)?%')) {
@@ -282,7 +294,11 @@ function Invoke-YtDlp([string]$exe, [string]$argString) {
     } finally {
         if (-not $p.HasExited) { Stop-Tree $p }
     }
+<<<<<<< HEAD
     return @{ code = $p.ExitCode; err = $err; cancelled = $cancelled; finalPath = $finalPath; already = $already; files = $files }
+=======
+    return @{ code = $p.ExitCode; err = $err; cancelled = $cancelled; finalPath = $finalPath; already = $already }
+>>>>>>> 63d176cdf9b04668e3c9abd6d39bfa40838421c3
 }
 
 function Invoke-Check {
@@ -294,6 +310,7 @@ function Invoke-Check {
     Send-Msg @{ type = 'check'; ok = $true; ytdlp = [string]$t.ytdlp; ffmpeg = [bool]$t.ffmpegDir; deno = [bool]$t.denoDir }
 }
 
+<<<<<<< HEAD
 function Test-TargetUrl([string]$u) {
     if ($u.Length -gt 2000 -or $u -cnotmatch '^https?://[^\s"<>]+$') { throw "That doesn't look like a link I can download from." }
     return $u
@@ -345,6 +362,13 @@ function Find-Winget {
 
 function Invoke-Download($msg) {
     $url = Test-TargetUrl ([string]$msg.url)
+=======
+function Invoke-Download($msg) {
+    $url = [string]$msg.url
+    if ($url -cnotmatch '^https://www\.youtube\.com/watch\?v=[A-Za-z0-9_-]{11}$') {
+        throw "That doesn't look like a YouTube video link."
+    }
+>>>>>>> 63d176cdf9b04668e3c9abd6d39bfa40838421c3
     $height = 0
     if ((-not [int]::TryParse([string]$msg.height, [ref]$height)) -or $height -lt 0 -or $height -gt 4320) {
         throw 'Unsupported resolution.'
@@ -356,6 +380,7 @@ function Invoke-Download($msg) {
         return
     }
     $ffArg = ''
+<<<<<<< HEAD
     if ($tools.ffmpegDir) { $ffArg = "--ffmpeg-location `"$($tools.ffmpegDir)`"" }
 
     $dl = Get-OutDir ([string]$msg.folder)
@@ -458,6 +483,38 @@ function Invoke-Download($msg) {
 
     $note = ''
     if ($withSubs) {
+=======
+    if ($tools.ffmpegDir) { $ffArg = "--ffmpeg-location `"$($tools.ffmpegDir)`" " }
+
+    $dl = Get-DownloadsDir
+
+    $audio = [string]$msg.audio
+    if (@('low', 'medium', 'high', 'super') -notcontains $audio) { $audio = 'high' }
+    switch ($audio) {
+        'low'    { $aSel = 'ba[abr<=70]' }
+        'medium' { $aSel = 'ba[abr<=130]' }
+        'high'   { $aSel = 'ba[abr<=170]' }
+        default  { $aSel = 'ba' }
+    }
+    if ($height -gt 0) { $v = "bv*[height<=$height]"; $hf = "[height<=$height]" } else { $v = 'bv*'; $hf = '' }
+    if ($aSel -eq 'ba') { $fmt = "$v+ba/b$hf" } else { $fmt = "$v+$aSel/$v+ba/b$hf" }
+
+    $tpl = '%(title)s.%(ext)s'
+    if ($msg.idInName) { $tpl = '%(title)s [%(id)s].%(ext)s' }
+    $login = [bool]$msg.login
+    $loginArg = ''
+    if ($login) { $loginArg = '--cookies-from-browser firefox ' }
+
+    $base = '--newline --no-colors --no-quiet --no-playlist --encoding utf-8 --trim-filenames 200 ' +
+            "-f `"$fmt`" --merge-output-format mkv --remux-video mkv " + $ffArg + $loginArg +
+            '--embed-metadata --embed-chapters --embed-thumbnail ' +
+            "-P `"$dl`" -o `"$tpl`" " +
+            '--print "after_move:FILEPATH|%(filepath)s"'
+    $subArgs = '--write-subs --write-auto-subs --sub-langs en --sleep-subtitles 2 --embed-subs'
+
+    $note = ''
+    if ($msg.subs) {
+>>>>>>> 63d176cdf9b04668e3c9abd6d39bfa40838421c3
         $r = Invoke-YtDlp $exe "$base $subArgs `"$url`""
         if ((-not $r.cancelled) -and $r.code -ne 0 -and $r.err -match '(?i)subtitle') {
             Send-Msg @{ type = 'log'; line = 'Captions were blocked by YouTube. Downloading without captions...' }
@@ -471,9 +528,13 @@ function Invoke-Download($msg) {
     if ($r.cancelled) {
         Send-Msg @{ type = 'done'; ok = $false; cancelled = $true; message = 'Download cancelled.' }
     } elseif ($r.code -eq 0) {
+<<<<<<< HEAD
         if ($playlist) { $text = "Saved $($r.files) video(s) to $where." }
         elseif ($r.already) { $text = "A file with this title is already in $where." }
         else { $text = "Saved to $where." }
+=======
+        $text = if ($r.already) { 'A file with this title is already in your Downloads folder.' } else { 'Saved to your Downloads folder.' }
+>>>>>>> 63d176cdf9b04668e3c9abd6d39bfa40838421c3
         Send-Msg @{ type = 'done'; ok = $true; message = ($text + $note); filePath = [string]$r.finalPath }
     } else {
         $f = Get-Friendly $r.err $login
@@ -481,6 +542,7 @@ function Invoke-Download($msg) {
     }
 }
 
+<<<<<<< HEAD
 function Invoke-Thumbnail($msg) {
     $url = Test-TargetUrl ([string]$msg.url)
     $fmt = [string]$msg.format
@@ -634,6 +696,15 @@ function Invoke-Reveal($msg) {
     $path = [IO.Path]::GetFullPath([string]$msg.path)
     if (-not (Test-File $path)) {
         Send-Msg @{ type = 'reveal'; ok = $false; message = "That file isn't there any more." }
+=======
+function Invoke-Reveal($msg) {
+    $sep = [string][IO.Path]::DirectorySeparatorChar
+    $dl = [IO.Path]::GetFullPath((Get-DownloadsDir)).TrimEnd($sep) + $sep
+    $path = [IO.Path]::GetFullPath([string]$msg.path)
+    $ok = $path.StartsWith($dl, [StringComparison]::OrdinalIgnoreCase) -and (Test-File $path)
+    if (-not $ok) {
+        Send-Msg @{ type = 'reveal'; ok = $false; message = 'That file is not in your Downloads folder.' }
+>>>>>>> 63d176cdf9b04668e3c9abd6d39bfa40838421c3
         return
     }
     if ($script:isWin) {
@@ -653,6 +724,7 @@ try {
     $req = Read-Msg
     if ($null -eq $req) { exit 0 }
     switch ([string]$req.action) {
+<<<<<<< HEAD
         'check'       { Invoke-Check }
         'download'    { Invoke-Download $req }
         'thumbnail'   { Invoke-Thumbnail $req }
@@ -662,9 +734,19 @@ try {
         'checkfolder' { Invoke-CheckFolder $req }
         'reveal'      { Invoke-Reveal $req }
         default       { Send-Msg @{ type = 'done'; ok = $false; message = 'Unknown request.' } }
+=======
+        'check'    { Invoke-Check }
+        'download' { Invoke-Download $req }
+        'reveal'   { Invoke-Reveal $req }
+        default    { Send-Msg @{ type = 'done'; ok = $false; message = 'Unknown request.' } }
+>>>>>>> 63d176cdf9b04668e3c9abd6d39bfa40838421c3
     }
 } catch {
     $text = $_.Exception.Message
     Send-Msg @{ type = 'done'; ok = $false; message = $text; detail = $text }
 }
+<<<<<<< HEAD
 exit 0
+=======
+exit 0
+>>>>>>> 63d176cdf9b04668e3c9abd6d39bfa40838421c3
